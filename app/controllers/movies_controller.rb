@@ -11,24 +11,71 @@ class MoviesController < ApplicationController
   
   def index
     @all_ratings = Movie::RATINGS
+    @pick_sort = nil
+    @redirect = false
+    
+    if params[:ratings] == nil && params[:sort] == nil
+      if session[:ratings] == nil 
+        session[:ratings] = {"G"=>1, "PG"=>1, "PG-13"=>1, "R"=>1}
+      end
+      if session[:sort] == "release_date"
+        @release_date_header = 'hilite'
+        @pick_sort = "release_date"
+      else
+        @title_header = 'hilite'
+        @pick_sort = "title"
+      end
+
+      @pick_rating = session[:ratings].keys.to_a 
+      @checked = session[:ratings]
+      @redirect = true
+    end
+    
     @checked = params[:ratings]
-    if @checked != nil
+    if params[:ratings] != nil 
+      session[:ratings] = params[:ratings]
       @pick_rating = params[:ratings].keys.to_a
     else
-      @pick_rating = @all_ratings
-      @checked = {}
-      @checked["no_rating"] = "no_rating"
+      if session[:ratings] != nil
+        @pick_rating = session[:ratings].keys.to_a
+        @checked = session[:ratings]
+        @redirect = true
+      else
+        @pick_rating = @all_ratings
+        @checked = Hash.new
+        @all_ratings.each { |rating| @checked[rating] = 1 }
+      end
     end
-    puts @checked.inspect
-    if params[:sort] == 'title'
-      @title_header = 'hilite'
-    elsif params[:sort] == 'release_date'
-      @release_date_header ='hilite'
-    end 
-    @movies = Movie.where(rating: @pick_rating).order(params[:sort])
-    #@all_ratings.each do |rating|
-      #@checked[rating] = (@pick_rating.match(rating) || 0)
-    #end
+
+    if params[:sort] != nil
+      session[:sort] = params[:sort]
+      if params[:sort] == 'title'
+        @title_header = 'hilite'
+      elsif params[:sort] == 'release_date'
+        @release_date_header ='hilite'
+      end
+      @pick_sort = params[:sort]
+    else
+      if session[:sort] == 'title'
+        @title_header = 'hilite'
+      elsif session[:sort] == 'release_date'
+        @release_date_header ='hilite'
+      end
+      @pick_sort = session[:sort]
+      @redirect = true
+    end
+
+    @pick_rating.each do |rating|
+      @checked[rating] = 1
+    end
+
+    if @redirect
+      flash.keep
+      redirect_to movies_path :sort=>session[:sort], :ratings=>session[:ratings]
+    end
+    
+    @movies = Movie.where(rating: @pick_rating).order(@pick_sort)
+
   end
 
   def new
