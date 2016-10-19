@@ -68,12 +68,14 @@ class MoviesController < ApplicationController
     @pick_rating.each do |rating|
       @checked[rating] = 1
     end
-
+=begin
     if @redirect
       flash.keep
+      @redirect = false
       redirect_to movies_path :sort=>session[:sort], :ratings=>session[:ratings]
+      puts session.inspect
     end
-    
+=end
     @movies = Movie.where(rating: @pick_rating).order(@pick_sort)
 
   end
