@@ -12,8 +12,7 @@ class MoviesController < ApplicationController
   def index
     @all_ratings = Movie::RATINGS
     @pick_sort = nil
-    @redirect = false
-    
+
     if params[:ratings] == nil && params[:sort] == nil
       if session[:ratings] == nil 
         session[:ratings] = {"G"=>1, "PG"=>1, "PG-13"=>1, "R"=>1}
@@ -28,7 +27,6 @@ class MoviesController < ApplicationController
 
       @pick_rating = session[:ratings].keys.to_a 
       @checked = session[:ratings]
-      @redirect = true
     end
     
     @checked = params[:ratings]
@@ -39,7 +37,6 @@ class MoviesController < ApplicationController
       if session[:ratings] != nil
         @pick_rating = session[:ratings].keys.to_a
         @checked = session[:ratings]
-        @redirect = true
       else
         @pick_rating = @all_ratings
         @checked = Hash.new
@@ -62,20 +59,12 @@ class MoviesController < ApplicationController
         @release_date_header ='hilite'
       end
       @pick_sort = session[:sort]
-      @redirect = true
     end
 
     @pick_rating.each do |rating|
       @checked[rating] = 1
     end
-=begin
-    if @redirect
-      flash.keep
-      @redirect = false
-      redirect_to movies_path :sort=>session[:sort], :ratings=>session[:ratings]
-      puts session.inspect
-    end
-=end
+
     @movies = Movie.where(rating: @pick_rating).order(@pick_sort)
 
   end
